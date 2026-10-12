@@ -1,0 +1,215 @@
+openapi: 3.0.3
+info:
+  title: Healthcare Demo Tools API
+  version: 1.0.0
+  description: |
+    REST API wrapper for the healthcare demo tools used by IBM watsonx Orchestrate.
+    Replace the server URL with the public URL assigned to your Render web service.
+servers:
+  - url: https://REPLACE_WITH_YOUR_RENDER_SERVICE.onrender.com
+    description: Render production service
+paths:
+  /api/is_provider_authorized:
+    post:
+      operationId: is_provider_authorized
+      summary: Determine whether a provider is authorized
+      description: Demo authorization endpoint. The current demo implementation always authorizes a valid request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - provider_id
+                - npi_number
+              properties:
+                provider_id:
+                  type: string
+                  description: Provider identifier.
+                  example: R12345678
+                npi_number:
+                  type: string
+                  description: Ten-digit National Provider Identifier.
+                  example: "1234567890"
+      responses:
+        "200":
+          description: Authorization result
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - authorized
+                properties:
+                  authorized:
+                    type: boolean
+        "400":
+          description: Invalid request
+
+  /api/get_member_profile:
+    post:
+      operationId: get_member_profile
+      summary: Retrieve a member profile and claims
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - member_id
+                - member_DOB
+              properties:
+                member_id:
+                  type: string
+                  pattern: '^\d{8}$'
+                  description: Eight-digit member identifier.
+                  example: "12345678"
+                member_DOB:
+                  type: string
+                  format: date
+                  description: Member date of birth in YYYY-MM-DD format.
+                  example: "1987-06-03"
+      responses:
+        "200":
+          description: Member profile, claims, and deductible contribution values
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberProfile"
+        "400":
+          description: Invalid member ID or date of birth
+
+  /api/has_met_deductible:
+    post:
+      operationId: has_met_deductible
+      summary: Determine whether a member has met the personal deductible
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - paid_towards_deductible
+                - member_personal_deductible
+              properties:
+                paid_towards_deductible:
+                  type: number
+                  format: float
+                  example: 800
+                member_personal_deductible:
+                  type: number
+                  format: float
+                  example: 1500
+      responses:
+        "200":
+          description: Deductible determination
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - has_met_deductible
+                properties:
+                  has_met_deductible:
+                    type: boolean
+        "400":
+          description: Invalid numeric inputs
+
+  /api/get_policy:
+    post:
+      operationId: get_policy
+      summary: Retrieve policy details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - policy_name
+              properties:
+                policy_name:
+                  type: string
+                  example: 2025 Gold PPO insurance policy
+      responses:
+        "200":
+          description: Policy details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Policy"
+        "400":
+          description: Invalid request
+
+components:
+  schemas:
+    Claim:
+      type: object
+      properties:
+        claim_title:
+          type: string
+        claim_number:
+          type: string
+        date_of_service:
+          type: string
+        status:
+          type: string
+        in_network:
+          type: boolean
+        provider:
+          type: string
+        claim_description:
+          type: string
+    MemberProfile:
+      type: object
+      required:
+        - member_id
+        - paid_toward_personal_deductible
+        - claims_list
+      properties:
+        member_id:
+          oneOf:
+            - type: integer
+            - type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        paid_toward_personal_deductible:
+          type: number
+        paid_toward_family_deductible:
+          type: number
+        member_plan:
+          type: string
+        claims_list:
+          type: array
+          items:
+            $ref: "#/components/schemas/Claim"
+    Policy:
+      type: object
+      required:
+        - policy_name
+        - personal_deductible
+        - family_deductible
+      properties:
+        policy_name:
+          type: string
+        personal_deductible:
+          type: number
+        family_deductible:
+          type: number
+        covered_before_deductible_list:
+          type: array
+          items:
+            type: string
+        out_of_pocket_limit_personal:
+          type: number
+        out_of_pocket_limit_family:
+          type: number
+        not_covered_in_out_of_pocket_list:
+          type: array
+          items:
+            type: string
