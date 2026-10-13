@@ -6,7 +6,7 @@ info:
     REST API wrapper for the healthcare demo tools used by IBM watsonx Orchestrate.
     Replace the server URL with the public URL assigned to your Render web service.
 servers:
-  - url: https://api.render.com/deploy/srv-db6d252jnfac73daq640?key=d14QTPtw27w
+  - url: https://wox-hc-tools-api.onrender.com
     description: Render production service
 paths:
   /api/is_provider_authorized:
